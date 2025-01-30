@@ -225,7 +225,7 @@ class Args:
     """the clip range"""
     gamma: float = 1
     """the discount factor"""
-    kl_estimator: Literal["kl1", "kl2", "kl3"] = "kl1"
+    kl_estimator: Literal["kl1", "kl2", "kl3"] = "kl3"
     """the KL estimator to use"""
     apply_verifiable_reward: bool = False
     """whether to apply verifiable reward"""

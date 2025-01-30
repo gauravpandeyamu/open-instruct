@@ -1169,9 +1169,10 @@ class PolicyTrainerRayProcess(RayProcess):
                         # grpo change: directly subtract KL in loss (add)
 
                         # kl loss should be computed without torch.no_grad()
-                        kl1 = new_logprobs - ref_logprobs[micro_batch_inds]
-                        kl2 = (kl1) ** 2 / 2
-                        kl3 = (-kl1).exp() - 1 + kl1
+                        ref_logprobs_diff = new_logprobs - ref_logprobs[micro_batch_inds]
+                        kl1 = ratio * ref_logprobs_diff
+                        kl2 = (ref_logprobs_diff) ** 2 / 2
+                        kl3 = (-ref_logprobs_diff).exp() - 1 + ref_logprobs_diff
                         if args.kl_estimator == "kl1":
                             kl = kl1
                         elif args.kl_estimator == "kl2":
@@ -1179,8 +1180,8 @@ class PolicyTrainerRayProcess(RayProcess):
                         elif args.kl_estimator == "kl3":
                             kl = kl3
 
-
-                        pg_loss = pg_loss + (args.beta * kl).mean()
+                        kl_loss = masked_mean(kl, ~padding_mask[micro_batch_inds])
+                        pg_loss = pg_loss + args.beta * kl_loss
                         loss = pg_loss
                         self.model.backward(loss)
                         # print("backward loss", self.rank, "micro batch start", micro_batch_start)
